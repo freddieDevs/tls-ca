@@ -1,4 +1,4 @@
-use tls_ca::tls::cert_ops::{client_load_ca_cert_chain, server_load_server_cert_chain};
+use tls_ca::{key_ops::server_load_single_key, tls::cert_ops::{client_load_ca_cert_chain, server_load_server_cert_chain}};
 
 fn main() -> miette::Result<()> {
     // load server-key from server-key.pem
@@ -10,6 +10,13 @@ fn main() -> miette::Result<()> {
         "{}, {:?}",
         "Server Certificate",
         server_cert_chain
+    );
+
+    let server_key = server_load_single_key()?;
+    println!(
+        "{}, {:?}",
+        "Server Private Key",
+        server_key
     );
 
     //load cert pem in client-code

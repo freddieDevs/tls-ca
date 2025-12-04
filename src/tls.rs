@@ -1,7 +1,8 @@
 use rustls::pki_types::CertificateDer;
 use rustls_pemfile::{Item::X509Certificate, read_one};
 use std::{io::BufReader, iter};
-
+use rustls::pki_types::PrivateKeyDer;
+use rustls_pemfile::Item;
 
 pub mod binary_data {
     //server-key files
@@ -61,5 +62,37 @@ pub mod cert_ops {
         }
 
         Ok(return_certs)
+    }
+}
+
+pub mod key_ops {
+    use super::*;
+
+    pub fn server_load_single_key() -> miette::Result<PrivateKeyDer<'static>> {
+        let mut return_keys = get_key_from_load_pem_data(binary_data::SERVER_KEY_PEM);
+
+        if return_keys.is_empty() {
+            miette::bail!(
+                "No server private key found in {:?}",
+                binary_data::SERVER_KEY_PEM_FILENAME
+            );
+        }
+        Ok(return_keys.remove(0))
+    }
+
+    fn get_key_from_load_pem_data(pem_data: &[u8]) -> Vec<PrivateKeyDer> {
+        let mut reader = BufReader::new(pem_data);
+        let mut return_keys = vec![];
+
+        for item in iter::from_fn(|| read_one(&mut reader).transpose()) {
+            match item {
+                Ok(Item::Pkcs1Key(key)) => {
+                    return_keys.push(PrivateKeyDer::Pkcs1(key));
+                }
+                _ => continue,
+            }
+        }
+
+        return_keys
     }
 }
