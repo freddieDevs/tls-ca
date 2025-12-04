@@ -1,0 +1,17 @@
+{
+  "CN": "server",
+  "hosts": [
+    "localhost"
+  ],
+  "key": {
+    "algo": "rsa",
+    "size": 2048
+  },
+  "names": [
+    {
+      "C": "KE",
+      "ST": "Nairobi",
+      "L": "Wanjiru"
+    }
+  ]
+}
