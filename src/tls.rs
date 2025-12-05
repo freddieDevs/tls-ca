@@ -108,7 +108,7 @@ pub mod tls_ops {
     use rustls::{ClientConfig, ServerConfig};
 
     // client calls this to upgrade a tcp stream to a tlsstream
-    fn create_client_tls_connector() -> miette::Result<TlsConnector> {
+    pub fn create_client_tls_connector() -> miette::Result<TlsConnector> {
         // load the ca cert 
         let root_cert_store = root_cert_store_ops::create_client_root_cert_store()?;
 
@@ -123,7 +123,7 @@ pub mod tls_ops {
     }
 
     // server tls acceptor
-    fn create_server_tls_acceptor() -> miette::Result<TlsAcceptor> {
+    pub fn create_server_tls_acceptor() -> miette::Result<TlsAcceptor> {
         //server cert chain, server private key
         let server_cert_chain = cert_ops::server_load_server_cert_chain()?;
         let server_key = key_ops::server_load_single_key()?;

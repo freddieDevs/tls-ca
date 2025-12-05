@@ -1,7 +1,8 @@
 {
   "CN": "server",
   "hosts": [
-    "localhost"
+    "localhost",
+    "frejinc.com"
   ],
   "key": {
     "algo": "rsa",
