@@ -3,6 +3,11 @@ use rustls_pemfile::{Item::X509Certificate, read_one};
 use std::{io::BufReader, iter};
 use rustls::pki_types::PrivateKeyDer;
 use rustls_pemfile::Item;
+use rustls::RootCertStore;
+use miette::IntoDiagnostic;
+use std::sync::Arc;
+use tokio_rustls::{TlsAcceptor, TlsConnector};
+
 
 pub mod binary_data {
     //server-key files
@@ -65,7 +70,7 @@ pub mod cert_ops {
     }
 }
 
-pub mod key_ops {
+ pub mod key_ops {
     use super::*;
 
     pub fn server_load_single_key() -> miette::Result<PrivateKeyDer<'static>> {
@@ -94,5 +99,56 @@ pub mod key_ops {
         }
 
         return_keys
+    }
+}
+
+pub mod tls_ops {
+    use super::*;
+    
+    use rustls::{ClientConfig, ServerConfig};
+
+    // client calls this to upgrade a tcp stream to a tlsstream
+    fn create_client_tls_connector() -> miette::Result<TlsConnector> {
+        // load the ca cert 
+        let root_cert_store = root_cert_store_ops::create_client_root_cert_store()?;
+
+        let client_config = ClientConfig::builder()
+            .with_root_certificates(root_cert_store)
+            .with_no_client_auth();
+        // requirement of the connector to wrap in an arc
+        let client_config = Arc::new(client_config);
+        let tls_connector = TlsConnector::from(client_config);
+
+        Ok(tls_connector)
+    }
+
+    // server tls acceptor
+    fn create_server_tls_acceptor() -> miette::Result<TlsAcceptor> {
+        //server cert chain, server private key
+        let server_cert_chain = cert_ops::server_load_server_cert_chain()?;
+        let server_key = key_ops::server_load_single_key()?;
+        let server_config = ServerConfig::builder()
+            .with_no_client_auth()
+            .with_single_cert(server_cert_chain, server_key)
+            .into_diagnostic()?;
+        let server_config = Arc::new(server_config);
+        let tls_acceptor = TlsAcceptor::from(server_config);
+        Ok(tls_acceptor)
+    }
+
+}
+
+pub mod root_cert_store_ops {
+    use super::*;
+
+    pub fn create_client_root_cert_store() -> miette::Result<RootCertStore> {
+        let mut root_cert_store = RootCertStore::empty();
+        let ca_cer_chain = cert_ops::client_load_ca_cert_chain()?;
+
+        for cert in ca_cer_chain {
+            root_cert_store.add(cert).into_diagnostic();
+        }
+
+        Ok(root_cert_store)
     }
 }
