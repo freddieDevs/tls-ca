@@ -146,7 +146,7 @@ pub mod root_cert_store_ops {
         let ca_cer_chain = cert_ops::client_load_ca_cert_chain()?;
 
         for cert in ca_cer_chain {
-            root_cert_store.add(cert).into_diagnostic();
+            let _ = root_cert_store.add(cert).into_diagnostic();
         }
 
         Ok(root_cert_store)

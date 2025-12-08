@@ -1,7 +1,8 @@
 use miette::IntoDiagnostic;
-use rustls::pki_types::ServerName;
+use rustls::{pki_types::ServerName};
 use tls_ca::{common_io, tls};
 
+//todo change this to only implement tokio_rustls & learn about the futures
 #[tokio::main]
 async fn main() -> miette::Result<()> {
     let address = format!("{}:{}", common_io::constants::HOST, common_io::constants::PORT);
@@ -20,13 +21,13 @@ async fn main() -> miette::Result<()> {
         .into_diagnostic()?;
     // securing the stream
     let tls_connector = tls::tls_ops::create_client_tls_connector()?;
-
+    
     let secure_stream = tls_connector
         .connect(server_name, stream)
         .await
         .into_diagnostic()?;
 
-    let (reader, writer) = tokio::io::split(secure_stream);
+    let (_reader, _writer) = tokio::io::split(secure_stream);
 
     //todo: split tcp stream to be able to perform read/write ops
     Ok(())
